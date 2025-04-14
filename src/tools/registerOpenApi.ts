@@ -170,7 +170,14 @@ function buildParametersZodSchema(operation: Operation) {
 
   const requestBody = operation.requestBody?.content["application/json"];
   if (requestBody) {
-    parametersSchema["requestBody"] = jsonSchemaToZod(requestBody.schema);
+    let requestBodySchema = jsonSchemaToZod(requestBody.schema);
+
+    if (operation.requestBody?.description && !requestBodySchema.description) {
+      requestBodySchema = requestBodySchema.describe(
+        operation.requestBody.description
+      );
+    }
+    parametersSchema["requestBody"] = requestBodySchema;
   }
 
   return parametersSchema;
