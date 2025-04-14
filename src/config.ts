@@ -3,7 +3,7 @@ const port = process.env.PORT ? parseInt(process.env.PORT) : 4242;
 export const CONFIG = {
   // Authentication stuff
   port,
-  clientId: "TODO",
+  clientId: "VERsdGeMujcaDaxphqeiRViwYvK2LtINlrD9EsZDWCs",
   redirectUri: `http://localhost:${port}/callback`,
   authEndpoint: "https://dashboard.algolia.com/oauth/authorize",
   tokenUrl: `https://dashboard.algolia.com/oauth/token`,
