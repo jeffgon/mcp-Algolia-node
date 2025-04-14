@@ -70,23 +70,23 @@ export async function registerOpenApiTools({
   allowedOperationIds,
 }: OpenApiToolsOptions) {
   for (const [path, methods] of Object.entries(openApiSpec.paths)) {
-    for (const [method, definition] of Object.entries(methods)) {
-      if (!allowedOperationIds?.has(definition.operationId)) {
+    for (const [method, operation] of Object.entries(methods)) {
+      if (!allowedOperationIds?.has(operation.operationId)) {
         continue;
       }
 
       server.tool(
-        definition.operationId,
-        definition.summary || definition.description || "",
+        operation.operationId,
+        operation.summary || operation.description || "",
         {
-          ...buildParametersZodSchema(definition.parameters),
+          ...buildParametersZodSchema(operation),
           ...buildUrlParameters(openApiSpec.servers),
         },
         buildToolCallback({
           path,
           serverBaseUrl: openApiSpec.servers[0].url,
           method: method as Methods,
-          parameters: definition.parameters,
+          parameters: operation.parameters,
           dashboardApi,
         }) as any // Just trust me bro
       );
@@ -113,7 +113,7 @@ function buildToolCallback({
     applicationId: string;
     [key: string]: any;
   }) => {
-    const { applicationId } = callbackParams;
+    const { applicationId, requestBody } = callbackParams;
     const apiKey = await dashboardApi.getApiKey(applicationId);
 
     serverBaseUrl = serverBaseUrl.replace(
@@ -130,15 +130,20 @@ function buildToolCallback({
       url.searchParams.set(parameter.name, callbackParams[parameter.name]);
     }
 
+    if (method === "get" && requestBody) {
+      throw new Error("requestBody is not supported for GET requests");
+    }
+
+    const body = requestBody ? JSON.stringify(requestBody) : undefined;
+
     const response = await fetch(url.toString(), {
       method,
       headers: {
         "X-Algolia-API-Key": apiKey,
         "X-Algolia-Application-Id": applicationId,
       },
+      body,
     });
-
-    // TODO: handle body
 
     const data = await response.json();
 
@@ -153,17 +158,20 @@ function buildToolCallback({
   };
 }
 
-function buildParametersZodSchema(parameters: Parameter[]) {
+function buildParametersZodSchema(operation: Operation) {
   // TODO: this is specific to search, other open api spec might have different default parameters
   const parametersSchema: Record<string, ZodType> = {
     applicationId: z.string(),
   };
 
-  for (let parameter of parameters) {
+  for (let parameter of operation.parameters) {
     parametersSchema[parameter.name] = jsonSchemaToZod(parameter.schema);
   }
 
-  // TODO: handle body when applicable
+  const requestBody = operation.requestBody?.content["application/json"];
+  if (requestBody) {
+    parametersSchema["requestBody"] = jsonSchemaToZod(requestBody.schema);
+  }
 
   return parametersSchema;
 }
