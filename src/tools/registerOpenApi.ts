@@ -1,8 +1,9 @@
 import yaml from "yaml";
 import fs from "node:fs/promises";
-import { z, ZodType } from "zod";
+import { z, type ZodType } from "zod";
 import { type McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { type DashboardApi } from "../DashboardApi.ts";
+import { jsonSchemaToZod, type JsonSchema } from "../helpers.ts";
 
 type Methods = "get" | "post" | "put" | "delete";
 type Operation = {
@@ -11,21 +12,35 @@ type Operation = {
   summary?: string;
   description?: string;
   parameters: Array<{ $ref: string } | Parameter>;
+  requestBody?: RequestBody;
 };
 
 type Path = Record<Methods, Operation>;
+
 type Parameter = {
   in: "query" | "path";
   name: string;
   description?: string;
   required?: boolean;
-  schema: { type: "string" | "integer" };
+  schema: JsonSchema;
 };
 
+type RequestBody = {
+  required?: boolean;
+  description?: string;
+  content: Record<string, RequestBodyContent>;
+};
+
+type RequestBodyContent = {
+  schema: JsonSchema;
+};
 
 type OpenApiSpec = {
   paths: Record<string, Path>;
-  servers: Array<{ url: string, variables?: Record<string, { default: string }> }>;
+  servers: Array<{
+    url: string;
+    variables?: Record<string, { default: string }>;
+  }>;
 };
 
 type OpenApiToolsOptions = {
@@ -40,8 +55,11 @@ export async function loadOpenApiSpec(path: string): Promise<OpenApiSpec> {
   return yaml.parse(openApiSpecContent, {});
 }
 
-function buildUrlParameters(servers: OpenApiSpec['servers']) {
-  return Object.keys(servers[0].variables || {}).reduce((acc, name) => ({...acc, [name]: z.string()}), {});
+function buildUrlParameters(servers: OpenApiSpec["servers"]) {
+  return Object.keys(servers[0].variables || {}).reduce(
+    (acc, name) => ({ ...acc, [name]: z.string() }),
+    {}
+  );
 }
 
 export async function registerOpenApiTools({
@@ -50,8 +68,6 @@ export async function registerOpenApiTools({
   openApiSpec,
   allowedOperationIds,
 }: OpenApiToolsOptions) {
-
-
   for (const [path, methods] of Object.entries(openApiSpec.paths)) {
     for (const [method, definition] of Object.entries(methods)) {
       if (!allowedOperationIds?.has(definition.operationId)) {
@@ -65,7 +81,10 @@ export async function registerOpenApiTools({
       server.tool(
         definition.operationId,
         definition.summary || definition.description || "",
-        {...buildParametersZodSchema(parameters), ...buildUrlParameters(openApiSpec.servers)},
+        {
+          ...buildParametersZodSchema(parameters),
+          ...buildUrlParameters(openApiSpec.servers),
+        },
         buildToolCallback({
           path,
           serverBaseUrl: openApiSpec.servers[0].url,
@@ -86,7 +105,6 @@ type ToolCallbackBuildOptions = {
   dashboardApi: DashboardApi;
 };
 
-
 function buildToolCallback({
   path,
   serverBaseUrl,
@@ -101,7 +119,10 @@ function buildToolCallback({
     const { applicationId } = callbackParams;
     const apiKey = await dashboardApi.getApiKey(applicationId);
 
-    serverBaseUrl = serverBaseUrl.replace(/{([^}]+)}/g, (_, key) => callbackParams[key]);
+    serverBaseUrl = serverBaseUrl.replace(
+      /{([^}]+)}/g,
+      (_, key) => callbackParams[key]
+    );
     const url = new URL(serverBaseUrl);
     url.pathname = path.replace(/{([^}]+)}/g, (_, key) => callbackParams[key]);
 
@@ -142,29 +163,7 @@ function buildParametersZodSchema(parameters: Parameter[]) {
   };
 
   for (let parameter of parameters) {
-    let param: ZodType;
-
-    switch (parameter.schema.type) {
-      case "string":
-        param = z.string();
-        break;
-      case "integer":
-        param = z.number().int();
-        break;
-      // TODO: handle more sophisticated types
-      default:
-        param = z.any();
-        break;
-    }
-
-    if (!parameter.required) {
-      param = param.optional();
-    }
-    if (parameter.description) {
-      param = param.describe(parameter.description);
-    }
-
-    parametersSchema[parameter.name] = param;
+    parametersSchema[parameter.name] = jsonSchemaToZod(parameter.schema);
   }
 
   // TODO: handle body when applicable
