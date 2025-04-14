@@ -73,3 +73,49 @@ export function jsonSchemaToZod(jsonSchema: JsonSchema): ZodType {
 
   return zodSchema;
 }
+
+export function expandAllRefs(json: object) {
+  const root = structuredClone(json);
+
+  function recursivelyExpand(obj: Record<string, any>): void {
+    for (const [key, value] of Object.entries(obj)) {
+      if (Array.isArray(value)) {
+        for (let i = 0; i < value.length; i++) {
+          const item = value[i];
+          if (item !== "object" || value === null) continue;
+
+          if ("$ref" in item) {
+            value[i] = valueAtPath(item.$ref, root);
+          } else {
+            recursivelyExpand(item);
+          }
+        }
+        continue;
+      }
+
+      if (typeof value === "object" && value !== null) {
+        if ("$ref" in value) {
+          obj[key] = valueAtPath(value.$ref, root);
+        } else {
+          recursivelyExpand(value);
+        }
+      }
+    }
+  }
+
+  recursivelyExpand(root);
+
+  return root;
+}
+
+function valueAtPath(path: string, target: Record<string, any>): any {
+  const parts = path.split("/").slice(1);
+  let value = target;
+
+  while (parts.length) {
+    const part = parts.shift()!;
+    value = value[part];
+  }
+
+  return value;
+}

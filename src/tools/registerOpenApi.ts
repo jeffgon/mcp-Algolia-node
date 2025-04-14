@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import { z, type ZodType } from "zod";
 import { type McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { type DashboardApi } from "../DashboardApi.ts";
-import { jsonSchemaToZod, type JsonSchema } from "../helpers.ts";
+import { expandAllRefs, jsonSchemaToZod, type JsonSchema } from "../helpers.ts";
 
 type Methods = "get" | "post" | "put" | "delete";
 type Operation = {
@@ -11,7 +11,7 @@ type Operation = {
   operationId: string;
   summary?: string;
   description?: string;
-  parameters: Array<{ $ref: string } | Parameter>;
+  parameters: Array<Parameter>;
   requestBody?: RequestBody;
 };
 
@@ -52,7 +52,8 @@ type OpenApiToolsOptions = {
 
 export async function loadOpenApiSpec(path: string): Promise<OpenApiSpec> {
   const openApiSpecContent = await fs.readFile(path, "utf-8");
-  return yaml.parse(openApiSpecContent, {});
+  const spec = yaml.parse(openApiSpecContent, {});
+  return expandAllRefs(spec) as OpenApiSpec;
 }
 
 function buildUrlParameters(servers: OpenApiSpec["servers"]) {
@@ -74,22 +75,18 @@ export async function registerOpenApiTools({
         continue;
       }
 
-      const parameters = definition.parameters.map((p) =>
-        "$ref" in p ? expandRef(p["$ref"], openApiSpec) : p
-      );
-
       server.tool(
         definition.operationId,
         definition.summary || definition.description || "",
         {
-          ...buildParametersZodSchema(parameters),
+          ...buildParametersZodSchema(definition.parameters),
           ...buildUrlParameters(openApiSpec.servers),
         },
         buildToolCallback({
           path,
           serverBaseUrl: openApiSpec.servers[0].url,
           method: method as Methods,
-          parameters,
+          parameters: definition.parameters,
           dashboardApi,
         }) as any // Just trust me bro
       );
@@ -169,16 +166,4 @@ function buildParametersZodSchema(parameters: Parameter[]) {
   // TODO: handle body when applicable
 
   return parametersSchema;
-}
-
-function expandRef(ref: string, target: any): Parameter {
-  const parts = ref.split("/").slice(1);
-  let value = target;
-
-  while (parts.length) {
-    const part = parts.shift()!;
-    value = value[part];
-  }
-
-  return value;
 }
