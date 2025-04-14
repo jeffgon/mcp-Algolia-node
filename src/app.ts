@@ -54,14 +54,18 @@ try {
   });
 
   const analyticsOpenApiSpec = await loadOpenApiSpec(
-      new URL("../data/analytics.yml", import.meta.url).pathname
+    new URL("../data/analytics.yml", import.meta.url).pathname
   );
 
   registerOpenApiTools({
     server,
     dashboardApi,
     openApiSpec: analyticsOpenApiSpec,
-    allowedOperationIds: new Set(["getTopSearches", "getTopHits", "getNoResultsRate"]),
+    allowedOperationIds: new Set([
+      "getTopSearches",
+      "getTopHits",
+      "getNoResultsRate",
+    ]),
   });
 
   const transport = new StdioServerTransport();
