@@ -17,12 +17,17 @@ type JsonSchemaObject = {
   additionalProperties?: boolean;
 };
 
+type JsonSchemaString = {
+  type: "string";
+  enum?: string[];
+};
+
 type JsonSchemaPrimitive = {
-  type: "string" | "number" | "integer" | "boolean";
+  type: "number" | "integer" | "boolean";
 };
 
 export type JsonSchema = JsonSchemaShared &
-  (JsonSchemaArray | JsonSchemaObject | JsonSchemaPrimitive);
+  (JsonSchemaArray | JsonSchemaString | JsonSchemaObject | JsonSchemaPrimitive);
 
 export function jsonSchemaToZod(jsonSchema: JsonSchema): ZodType {
   let zodSchema: ZodType;
@@ -69,6 +74,17 @@ export function jsonSchemaToZod(jsonSchema: JsonSchema): ZodType {
     zodSchema = zodSchema.describe(jsonSchema.description);
   } else if (jsonSchema.title) {
     zodSchema = zodSchema.describe(jsonSchema.title);
+  }
+
+  if (jsonSchema.type === "string" && jsonSchema.enum) {
+    zodSchema = zodSchema.describe(
+      [
+        zodSchema.description,
+        `Value must be one of: ${jsonSchema.enum.join(", ")}.`,
+      ]
+        .filter(Boolean)
+        .join("\n")
+    );
   }
 
   return zodSchema;
