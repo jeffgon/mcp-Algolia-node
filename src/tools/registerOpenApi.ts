@@ -134,7 +134,12 @@ function buildToolCallback({
       throw new Error("requestBody is not supported for GET requests");
     }
 
-    const body = requestBody ? JSON.stringify(requestBody) : undefined;
+    const body = requestBody
+      ? // Claude likes to send me JSON already serialized as a string...
+        isJsonString(requestBody)
+        ? requestBody
+        : JSON.stringify(requestBody)
+      : undefined;
 
     const response = await fetch(url.toString(), {
       method,
@@ -156,6 +161,17 @@ function buildToolCallback({
       ],
     };
   };
+}
+
+function isJsonString(json: unknown): json is string {
+  if (typeof json !== "string") return false;
+
+  try {
+    JSON.parse(json);
+    return true;
+  } catch {}
+
+  return false;
 }
 
 function buildParametersZodSchema(operation: Operation) {

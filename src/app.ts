@@ -50,7 +50,11 @@ try {
     server,
     dashboardApi,
     openApiSpec: searchOpenApiSpec,
-    allowedOperationIds: new Set(["listIndices", "getSettings"]),
+    allowedOperationIds: new Set([
+      "listIndices",
+      "getSettings",
+      "searchSingleIndex",
+    ]),
   });
 
   const analyticsOpenApiSpec = await loadOpenApiSpec(
