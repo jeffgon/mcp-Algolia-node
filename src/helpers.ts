@@ -82,7 +82,7 @@ export function expandAllRefs(json: object) {
       if (Array.isArray(value)) {
         for (let i = 0; i < value.length; i++) {
           const item = value[i];
-          if (item !== "object" || value === null) continue;
+          if (typeof item !== "object" || value === null) continue;
 
           if ("$ref" in item) {
             value[i] = valueAtPath(item.$ref, root);
