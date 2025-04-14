@@ -17,6 +17,10 @@ type JsonSchemaObject = {
   additionalProperties?: boolean;
 };
 
+type JsonSchemaOneOf = {
+  oneOf: JsonSchema[];
+};
+
 type JsonSchemaString = {
   type: "string";
   enum?: string[];
@@ -26,10 +30,24 @@ type JsonSchemaPrimitive = {
   type: "number" | "integer" | "boolean";
 };
 
-export type JsonSchema = JsonSchemaShared &
-  (JsonSchemaArray | JsonSchemaString | JsonSchemaObject | JsonSchemaPrimitive);
+export type JsonSchema =
+  | JsonSchemaOneOf
+  | (JsonSchemaShared &
+      (
+        | JsonSchemaArray
+        | JsonSchemaString
+        | JsonSchemaObject
+        | JsonSchemaPrimitive
+      ));
 
 export function jsonSchemaToZod(jsonSchema: JsonSchema): ZodType {
+  if ("oneOf" in jsonSchema) {
+    return z.union(
+      // @ts-expect-error
+      jsonSchema.oneOf.map((s) => jsonSchemaToZod(s))
+    );
+  }
+
   let zodSchema: ZodType;
 
   switch (jsonSchema.type) {
@@ -38,6 +56,9 @@ export function jsonSchemaToZod(jsonSchema: JsonSchema): ZodType {
       break;
     case "integer":
       zodSchema = z.number().int();
+      break;
+    case "number":
+      zodSchema = z.number();
       break;
     case "array":
       zodSchema = z.array(jsonSchemaToZod(jsonSchema.items));
@@ -65,11 +86,13 @@ export function jsonSchemaToZod(jsonSchema: JsonSchema): ZodType {
       zodSchema = objectSchema;
       break;
     }
+    case "boolean":
+      zodSchema = z.boolean();
+      break;
     default:
       zodSchema = z.any();
       break;
   }
-
   if (jsonSchema.description) {
     zodSchema = zodSchema.describe(jsonSchema.description);
   } else if (jsonSchema.title) {
