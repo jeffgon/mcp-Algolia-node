@@ -20,6 +20,8 @@ const DEFAULT_ALLOW_TOOLS = [
   "getTopSearches",
   "getTopHits",
   "getNoResultsRate",
+  // AB Testing
+  "listABTests",
 ];
 const ALLOW_TOOLS_OPTIONS_TUPLE = [
   "-t, --allow-tools <tools>",
