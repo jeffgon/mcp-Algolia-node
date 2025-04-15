@@ -15,7 +15,7 @@ import {
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { loadOpenApiSpec, registerOpenApiTools } from "../tools/registerOpenApi.ts";
 import { CONFIG } from "../config.ts";
-import { ANALYTICS_SPEC_PATH, SEARCH_SPEC_PATH } from "../openApiSpecs.ts";
+import { ANALYTICS_SPEC_PATH, RECOMMEND_SPEC_PATH, SEARCH_SPEC_PATH } from "../openApiSpecs.ts";
 import { type CliFilteringOptions, getToolFilter, isToolAllowed } from "../toolFilters.ts";
 
 export type StartServerOptions = CliFilteringOptions;
@@ -71,6 +71,14 @@ export async function startServer(opts: StartServerOptions) {
       server,
       dashboardApi,
       openApiSpec: await loadOpenApiSpec(ANALYTICS_SPEC_PATH),
+      toolFilter,
+    });
+
+    // Recommend API Tools
+    registerOpenApiTools({
+      server,
+      dashboardApi,
+      openApiSpec: await loadOpenApiSpec(RECOMMEND_SPEC_PATH),
       toolFilter,
     });
 
