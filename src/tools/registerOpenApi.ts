@@ -35,7 +35,11 @@ type RequestBodyContent = {
   schema: JsonSchema;
 };
 
-type OpenApiSpec = {
+export type OpenApiSpec = {
+  info: {
+    title: string;
+    description: string;
+  };
   paths: Record<string, Path>;
   servers: Array<{
     url: string;

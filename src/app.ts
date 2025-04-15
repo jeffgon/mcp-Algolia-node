@@ -1,82 +1,55 @@
-#!/usr/bin/env -S node --experimental-strip-types
+#!/usr/bin/env -S node --experimental-strip-types --no-warnings=ExperimentalWarning
 
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { authenticate } from "./authentication.ts";
-import { AppStateManager } from "./appState.ts";
-import { DashboardApi } from "./DashboardApi.ts";
-import { registerGetUserInfo } from "./tools/registerGetUserInfo.ts";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { registerGetApplications } from "./tools/registerGetApplications.ts";
-import {
-  loadOpenApiSpec,
-  registerOpenApiTools,
-} from "./tools/registerOpenApi.ts";
-import { CONFIG } from "./config.ts";
+import { Command } from "commander";
+import { type StartServerOptions } from "./commands/start-server.ts";
 
-try {
-  const appState = await AppStateManager.load();
+const program = new Command("algolia-mcp");
 
-  if (!appState.get("accessToken")) {
-    const token = await authenticate();
-
-    await appState.update({
-      accessToken: token.access_token,
-      refreshToken: token.refresh_token,
-    });
-  }
-
-  const dashboardApi = new DashboardApi({
-    baseUrl: CONFIG.dashboardApiBaseUrl,
-    appState,
-  });
-
-  const server = new McpServer({
-    name: "algolia",
-    version: "1.0.0",
-    capabilities: {
-      resources: {},
-      tools: {},
-    },
-  });
-
-  // Dashboard API Tools
-  registerGetUserInfo(server, dashboardApi);
-  registerGetApplications(server, dashboardApi);
-
-  // Search API Tools
-  const searchOpenApiSpec = await loadOpenApiSpec(
-    new URL("../data/search.yml", import.meta.url).pathname
-  );
-
-  registerOpenApiTools({
-    server,
-    dashboardApi,
-    openApiSpec: searchOpenApiSpec,
-    allowedOperationIds: new Set([
+program
+  .command("start-server", { isDefault: true })
+  .description("Starts the Algolia MCP server")
+  .option<string[]>(
+    "-t, --allow-tools <tools>",
+    "Comma separated list of tool ids",
+    (val) => val.split(",").map((s) => s.trim()),
+    [
+      "getUserInfo",
+      "getApplications",
       "listIndices",
       "getSettings",
       "searchSingleIndex",
-    ]),
-  });
-
-  const analyticsOpenApiSpec = await loadOpenApiSpec(
-    new URL("../data/analytics.yml", import.meta.url).pathname
-  );
-
-  registerOpenApiTools({
-    server,
-    dashboardApi,
-    openApiSpec: analyticsOpenApiSpec,
-    allowedOperationIds: new Set([
       "getTopSearches",
       "getTopHits",
       "getNoResultsRate",
-    ]),
+    ]
+  )
+  .action(async (opts: StartServerOptions) => {
+    const { startServer } = await import("./commands/start-server.ts");
+    await startServer(opts);
   });
 
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-} catch (err) {
-  console.error("Error starting server:", err);
-  process.exit(1);
-}
+program
+  .command("authenticate")
+  .description("Authenticate with Algolia")
+  .action(async () => {
+    const { authenticate } = await import("./commands/authenticate.ts");
+    await authenticate();
+  });
+
+program
+  .command("logout")
+  .description("Remove all stored credentials")
+  .action(async () => {
+    const { logout } = await import("./commands/logout.ts");
+    await logout();
+  });
+
+program
+  .command("list-tools")
+  .description("List all available tools")
+  .action(async () => {
+    const { listTools } = await import("./commands/list-tools.ts");
+    await listTools();
+  });
+
+program.parse();
