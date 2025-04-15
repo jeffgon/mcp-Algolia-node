@@ -6,10 +6,12 @@ import { type CliFilteringOptions, getToolFilter, isToolAllowed } from "../toolF
 
 const API_SPECS_PATHS = Object.values(specs);
 
-export type ListToolsOptions = CliFilteringOptions;
+export type ListToolsOptions = CliFilteringOptions & {
+  all: boolean;
+};
 
 export async function listTools(opts: ListToolsOptions): Promise<void> {
-  const toolFilter = getToolFilter(opts);
+  const toolFilter = opts.all ? undefined : getToolFilter(opts);
 
   const dashboardApiTools = [GetUserInfoOperationId, GetApplicationsOperationId].filter((id) =>
     isToolAllowed(id, toolFilter),

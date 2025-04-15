@@ -60,8 +60,9 @@ program
 
 program
   .command("list-tools")
-  .description("List all available tools")
+  .description("List available tools")
   .option<string[]>(...ALLOW_TOOLS_OPTIONS_TUPLE)
+  .option("--all", "List all tools")
   .action(async (opts: ListToolsOptions) => {
     const { listTools } = await import("./commands/list-tools.ts");
     await listTools(opts);
