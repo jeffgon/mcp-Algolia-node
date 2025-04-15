@@ -4,6 +4,7 @@ import { z, type ZodType } from "zod";
 import { type McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { type DashboardApi } from "../DashboardApi.ts";
 import { expandAllRefs, jsonSchemaToZod, type JsonSchema } from "../helpers.ts";
+import { isToolAllowed, type ToolFilter } from "../toolFilters.ts";
 
 type Methods = "get" | "post" | "put" | "delete";
 type Operation = {
@@ -51,7 +52,7 @@ type OpenApiToolsOptions = {
   server: McpServer;
   dashboardApi: DashboardApi;
   openApiSpec: OpenApiSpec;
-  allowedOperationIds?: Set<string>;
+  toolFilter?: ToolFilter;
 };
 
 export async function loadOpenApiSpec(path: string): Promise<OpenApiSpec> {
@@ -71,13 +72,11 @@ export async function registerOpenApiTools({
   server,
   dashboardApi,
   openApiSpec,
-  allowedOperationIds,
+  toolFilter,
 }: OpenApiToolsOptions) {
   for (const [path, methods] of Object.entries(openApiSpec.paths)) {
     for (const [method, operation] of Object.entries(methods)) {
-      if (!allowedOperationIds?.has(operation.operationId)) {
-        continue;
-      }
+      if (!isToolAllowed(operation.operationId, toolFilter)) continue;
 
       server.tool(
         operation.operationId,

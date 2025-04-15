@@ -15,13 +15,12 @@ import {
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { loadOpenApiSpec, registerOpenApiTools } from "../tools/registerOpenApi.ts";
 import { CONFIG } from "../config.ts";
+import { ANALYTICS_SPEC_PATH, SEARCH_SPEC_PATH } from "../openApiSpecs.ts";
+import { type CliFilteringOptions, getToolFilter, isToolAllowed } from "../toolFilters.ts";
 
-export type StartServerOptions = {
-  allowTools: string[];
-};
+export type StartServerOptions = CliFilteringOptions;
 
 export async function startServer(opts: StartServerOptions) {
-  console.error("HELLO WORLD", opts);
   try {
     const appState = await AppStateManager.load();
 
@@ -48,38 +47,31 @@ export async function startServer(opts: StartServerOptions) {
       },
     });
 
-    const allowedOperationIds = new Set(opts.allowTools);
+    const toolFilter = getToolFilter(opts);
 
     // Dashboard API Tools
-    if (allowedOperationIds.has(GetUserInfoOperationId)) {
+    if (isToolAllowed(GetUserInfoOperationId, toolFilter)) {
       registerGetUserInfo(server, dashboardApi);
     }
 
-    if (allowedOperationIds.has(GetApplicationsOperationId)) {
+    if (isToolAllowed(GetApplicationsOperationId, toolFilter)) {
       registerGetApplications(server, dashboardApi);
     }
 
     // Search API Tools
-    const searchOpenApiSpec = await loadOpenApiSpec(
-      new URL("../../data/search.yml", import.meta.url).pathname,
-    );
-
     registerOpenApiTools({
       server,
       dashboardApi,
-      openApiSpec: searchOpenApiSpec,
-      allowedOperationIds,
+      openApiSpec: await loadOpenApiSpec(SEARCH_SPEC_PATH),
+      toolFilter,
     });
 
-    const analyticsOpenApiSpec = await loadOpenApiSpec(
-      new URL("../../data/analytics.yml", import.meta.url).pathname,
-    );
-
+    // Analytics API Tools
     registerOpenApiTools({
       server,
       dashboardApi,
-      openApiSpec: analyticsOpenApiSpec,
-      allowedOperationIds,
+      openApiSpec: await loadOpenApiSpec(ANALYTICS_SPEC_PATH),
+      toolFilter,
     });
 
     const transport = new StdioServerTransport();

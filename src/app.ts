@@ -2,27 +2,31 @@
 
 import { Command } from "commander";
 import { type StartServerOptions } from "./commands/start-server.ts";
+import { type ListToolsOptions } from "./commands/list-tools.ts";
 
 const program = new Command("algolia-mcp");
+
+const DEFAULT_ALLOW_TOOLS = [
+  "getUserInfo",
+  "getApplications",
+  "listIndices",
+  "getSettings",
+  "searchSingleIndex",
+  "getTopSearches",
+  "getTopHits",
+  "getNoResultsRate",
+];
+const ALLOW_TOOLS_OPTIONS_TUPLE = [
+  "-t, --allow-tools <tools>",
+  "Comma separated list of tool ids",
+  (val: string) => val.split(",").map((s) => s.trim()),
+  DEFAULT_ALLOW_TOOLS,
+] as const;
 
 program
   .command("start-server", { isDefault: true })
   .description("Starts the Algolia MCP server")
-  .option<string[]>(
-    "-t, --allow-tools <tools>",
-    "Comma separated list of tool ids",
-    (val) => val.split(",").map((s) => s.trim()),
-    [
-      "getUserInfo",
-      "getApplications",
-      "listIndices",
-      "getSettings",
-      "searchSingleIndex",
-      "getTopSearches",
-      "getTopHits",
-      "getNoResultsRate",
-    ],
-  )
+  .option<string[]>(...ALLOW_TOOLS_OPTIONS_TUPLE)
   .action(async (opts: StartServerOptions) => {
     const { startServer } = await import("./commands/start-server.ts");
     await startServer(opts);
@@ -47,9 +51,10 @@ program
 program
   .command("list-tools")
   .description("List all available tools")
-  .action(async () => {
+  .option<string[]>(...ALLOW_TOOLS_OPTIONS_TUPLE)
+  .action(async (opts: ListToolsOptions) => {
     const { listTools } = await import("./commands/list-tools.ts");
-    await listTools();
+    await listTools(opts);
   });
 
 program.parse();
