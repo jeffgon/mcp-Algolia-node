@@ -63,7 +63,7 @@ export async function loadOpenApiSpec(path: string): Promise<OpenApiSpec> {
 function buildUrlParameters(servers: OpenApiSpec["servers"]) {
   return Object.keys(servers[0].variables || {}).reduce(
     (acc, name) => ({ ...acc, [name]: z.string() }),
-    {}
+    {},
   );
 }
 
@@ -86,13 +86,14 @@ export async function registerOpenApiTools({
           ...buildParametersZodSchema(operation),
           ...buildUrlParameters(openApiSpec.servers),
         },
+        // @ts-expect-error - the types are hard to satisfy when building tools dynamically. Just trust me bro.
         buildToolCallback({
           path,
           serverBaseUrl: openApiSpec.servers[0].url,
           method: method as Methods,
           parameters: operation.parameters,
           dashboardApi,
-        }) as any // Just trust me bro
+        }),
       );
     }
   }
@@ -115,15 +116,13 @@ function buildToolCallback({
 }: ToolCallbackBuildOptions) {
   return async (callbackParams: {
     applicationId: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
   }) => {
     const { applicationId, requestBody } = callbackParams;
     const apiKey = await dashboardApi.getApiKey(applicationId);
 
-    serverBaseUrl = serverBaseUrl.replace(
-      /{([^}]+)}/g,
-      (_, key) => callbackParams[key]
-    );
+    serverBaseUrl = serverBaseUrl.replace(/{([^}]+)}/g, (_, key) => callbackParams[key]);
     const url = new URL(serverBaseUrl);
     url.pathname = path.replace(/{([^}]+)}/g, (_, key) => callbackParams[key]);
 
@@ -173,7 +172,9 @@ function isJsonString(json: unknown): json is string {
   try {
     JSON.parse(json);
     return true;
-  } catch {}
+  } catch {
+    // It wasn't valid JSON
+  }
 
   return false;
 }
@@ -184,7 +185,7 @@ function buildParametersZodSchema(operation: Operation) {
     applicationId: z.string(),
   };
 
-  for (let parameter of operation.parameters) {
+  for (const parameter of operation.parameters) {
     parametersSchema[parameter.name] = jsonSchemaToZod(parameter.schema);
   }
 
@@ -193,9 +194,7 @@ function buildParametersZodSchema(operation: Operation) {
     let requestBodySchema = jsonSchemaToZod(requestBody.schema);
 
     if (operation.requestBody?.description && !requestBodySchema.description) {
-      requestBodySchema = requestBodySchema.describe(
-        operation.requestBody.description
-      );
+      requestBodySchema = requestBodySchema.describe(operation.requestBody.description);
     }
     parametersSchema["requestBody"] = requestBodySchema;
   }

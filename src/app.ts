@@ -21,7 +21,7 @@ program
       "getTopSearches",
       "getTopHits",
       "getNoResultsRate",
-    ]
+    ],
   )
   .action(async (opts: StartServerOptions) => {
     const { startServer } = await import("./commands/start-server.ts");

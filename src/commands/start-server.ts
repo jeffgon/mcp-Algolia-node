@@ -13,10 +13,7 @@ import {
   operationId as GetApplicationsOperationId,
 } from "../tools/registerGetApplications.ts";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import {
-  loadOpenApiSpec,
-  registerOpenApiTools,
-} from "../tools/registerOpenApi.ts";
+import { loadOpenApiSpec, registerOpenApiTools } from "../tools/registerOpenApi.ts";
 import { CONFIG } from "../config.ts";
 
 export type StartServerOptions = {
@@ -64,7 +61,7 @@ export async function startServer(opts: StartServerOptions) {
 
     // Search API Tools
     const searchOpenApiSpec = await loadOpenApiSpec(
-      new URL("../../data/search.yml", import.meta.url).pathname
+      new URL("../../data/search.yml", import.meta.url).pathname,
     );
 
     registerOpenApiTools({
@@ -75,7 +72,7 @@ export async function startServer(opts: StartServerOptions) {
     });
 
     const analyticsOpenApiSpec = await loadOpenApiSpec(
-      new URL("../../data/analytics.yml", import.meta.url).pathname
+      new URL("../../data/analytics.yml", import.meta.url).pathname,
     );
 
     registerOpenApiTools({

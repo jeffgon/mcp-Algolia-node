@@ -8,10 +8,7 @@ const API_SPECS_PATHS = [
 ];
 
 export async function listTools(): Promise<void> {
-  displayGroup("Dashboard API", [
-    GetUserInfoOperationId,
-    GetApplicationsOperationId,
-  ]);
+  displayGroup("Dashboard API", [GetUserInfoOperationId, GetApplicationsOperationId]);
 
   for (const specPath of API_SPECS_PATHS) {
     const spec = await loadOpenApiSpec(specPath);

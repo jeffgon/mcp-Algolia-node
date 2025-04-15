@@ -34,10 +34,10 @@ export class AppStateManager {
       let content: Partial<AppState> = {};
 
       try {
-        content = JSON.parse(
-          await fs.readFile(APP_STATE_PATH, "utf-8")
-        ) as Partial<AppState>;
-      } catch {}
+        content = JSON.parse(await fs.readFile(APP_STATE_PATH, "utf-8")) as Partial<AppState>;
+      } catch {
+        console.error(`Could not read app state file at ${APP_STATE_PATH}. Using default state.`);
+      }
 
       SINGLETON = new AppStateManager({ ...DEFAULT_APP_STATE, ...content });
     }
