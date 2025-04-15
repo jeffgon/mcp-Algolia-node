@@ -7,11 +7,16 @@ import { type ListToolsOptions } from "./commands/list-tools.ts";
 const program = new Command("algolia-mcp");
 
 const DEFAULT_ALLOW_TOOLS = [
+  // Dashboard API Tools
   "getUserInfo",
   "getApplications",
+  // Search
   "listIndices",
   "getSettings",
   "searchSingleIndex",
+  "searchRules",
+  "searchSynonyms",
+  // Analytics
   "getTopSearches",
   "getTopHits",
   "getNoResultsRate",
