@@ -1,3 +1,5 @@
+#!/usr/bin/env -S node --experimental-strip-types
+
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { authenticate } from "./authentication.ts";
 import { AppStateManager } from "./appState.ts";
