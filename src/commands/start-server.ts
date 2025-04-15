@@ -13,11 +13,16 @@ import {
   operationId as GetApplicationsOperationId,
 } from "../tools/registerGetApplications.ts";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { loadOpenApiSpec, registerOpenApiTools } from "../tools/registerOpenApi.ts";
+import {
+  createApiKeyAuthMiddleware,
+  loadOpenApiSpec,
+  registerOpenApiTools,
+} from "../tools/registerOpenApi.ts";
 import { CONFIG } from "../config.ts";
 import {
   AB_TESTING_SPEC_PATH,
   ANALYTICS_SPEC_PATH,
+  MONITORING_SPEC_PATH,
   RECOMMEND_SPEC_PATH,
   SEARCH_SPEC_PATH,
 } from "../openApiSpecs.ts";
@@ -63,12 +68,15 @@ export async function startServer(opts: StartServerOptions) {
       registerGetApplications(server, dashboardApi);
     }
 
+    const apiKeyAuthMiddleware = createApiKeyAuthMiddleware(dashboardApi);
+
     // Search API Tools
     registerOpenApiTools({
       server,
       dashboardApi,
       openApiSpec: await loadOpenApiSpec(SEARCH_SPEC_PATH),
       toolFilter,
+      requestMiddlewares: [apiKeyAuthMiddleware],
     });
 
     // Analytics API Tools
@@ -77,6 +85,7 @@ export async function startServer(opts: StartServerOptions) {
       dashboardApi,
       openApiSpec: await loadOpenApiSpec(ANALYTICS_SPEC_PATH),
       toolFilter,
+      requestMiddlewares: [apiKeyAuthMiddleware],
     });
 
     // Recommend API Tools
@@ -85,6 +94,7 @@ export async function startServer(opts: StartServerOptions) {
       dashboardApi,
       openApiSpec: await loadOpenApiSpec(RECOMMEND_SPEC_PATH),
       toolFilter,
+      requestMiddlewares: [apiKeyAuthMiddleware],
     });
 
     // AB Testing
@@ -92,6 +102,15 @@ export async function startServer(opts: StartServerOptions) {
       server,
       dashboardApi,
       openApiSpec: await loadOpenApiSpec(AB_TESTING_SPEC_PATH),
+      toolFilter,
+      requestMiddlewares: [apiKeyAuthMiddleware],
+    });
+
+    // Monitoring API Tools
+    registerOpenApiTools({
+      server,
+      dashboardApi,
+      openApiSpec: await loadOpenApiSpec(MONITORING_SPEC_PATH),
       toolFilter,
     });
 

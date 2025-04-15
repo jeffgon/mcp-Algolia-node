@@ -22,6 +22,9 @@ const DEFAULT_ALLOW_TOOLS = [
   "getNoResultsRate",
   // AB Testing
   "listABTests",
+  // Monitoring
+  "getClustersStatus",
+  "getIncidents",
 ];
 const ALLOW_TOOLS_OPTIONS_TUPLE = [
   "-t, --allow-tools <tools>",

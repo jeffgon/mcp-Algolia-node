@@ -12,7 +12,7 @@ type Operation = {
   operationId: string;
   summary?: string;
   description?: string;
-  parameters: Array<Parameter>;
+  parameters?: Array<Parameter>;
   requestBody?: RequestBody;
 };
 
@@ -48,11 +48,18 @@ export type OpenApiSpec = {
   }>;
 };
 
+export type RequestMiddleware = (opts: {
+  request: Request;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  params: Record<string, any>;
+}) => Promise<Request>;
+
 type OpenApiToolsOptions = {
   server: McpServer;
   dashboardApi: DashboardApi;
   openApiSpec: OpenApiSpec;
   toolFilter?: ToolFilter;
+  requestMiddlewares?: Array<RequestMiddleware>;
 };
 
 export async function loadOpenApiSpec(path: string): Promise<OpenApiSpec> {
@@ -68,11 +75,24 @@ function buildUrlParameters(servers: OpenApiSpec["servers"]) {
   );
 }
 
+export const createApiKeyAuthMiddleware =
+  (dashboardApi: DashboardApi): RequestMiddleware =>
+  async ({ request, params }) => {
+    const apiKey = await dashboardApi.getApiKey(params.applicationId);
+    const r = request.clone();
+
+    r.headers.set("x-algolia-application-id", params.applicationId);
+    r.headers.set("x-algolia-api-key", apiKey);
+
+    return r;
+  };
+
 export async function registerOpenApiTools({
   server,
   dashboardApi,
   openApiSpec,
   toolFilter,
+  requestMiddlewares,
 }: OpenApiToolsOptions) {
   for (const [path, methods] of Object.entries(openApiSpec.paths)) {
     for (const [method, operation] of Object.entries(methods)) {
@@ -92,6 +112,7 @@ export async function registerOpenApiTools({
           method: method as Methods,
           parameters: operation.parameters,
           dashboardApi,
+          requestMiddlewares,
         }),
       );
     }
@@ -102,34 +123,31 @@ type ToolCallbackBuildOptions = {
   path: string;
   serverBaseUrl: string;
   method: Methods;
-  parameters: Parameter[];
+  parameters?: Parameter[];
   dashboardApi: DashboardApi;
+  requestMiddlewares?: Array<RequestMiddleware>;
 };
 
 function buildToolCallback({
   path,
   serverBaseUrl,
   method,
-  parameters,
-  dashboardApi,
+  parameters = [],
+  requestMiddlewares,
 }: ToolCallbackBuildOptions) {
-  return async (callbackParams: {
-    applicationId: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    [key: string]: any;
-  }) => {
-    const { applicationId, requestBody } = callbackParams;
-    const apiKey = await dashboardApi.getApiKey(applicationId);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return async (params: Record<string, any>) => {
+    const { requestBody } = params;
 
-    serverBaseUrl = serverBaseUrl.replace(/{([^}]+)}/g, (_, key) => callbackParams[key]);
+    serverBaseUrl = serverBaseUrl.replace(/{([^}]+)}/g, (_, key) => params[key]);
     const url = new URL(serverBaseUrl);
-    url.pathname = path.replace(/{([^}]+)}/g, (_, key) => callbackParams[key]);
+    url.pathname = path.replace(/{([^}]+)}/g, (_, key) => params[key]);
 
     for (const parameter of parameters) {
       if (parameter.in !== "query") continue;
       // TODO: throw error if param is required and not in callbackParams
-      if (!(parameter.name in callbackParams)) continue;
-      url.searchParams.set(parameter.name, callbackParams[parameter.name]);
+      if (!(parameter.name in params)) continue;
+      url.searchParams.set(parameter.name, params[parameter.name]);
     }
 
     if (method === "get" && requestBody) {
@@ -143,14 +161,15 @@ function buildToolCallback({
         : JSON.stringify(requestBody)
       : undefined;
 
-    const response = await fetch(url.toString(), {
-      method,
-      headers: {
-        "X-Algolia-API-Key": apiKey,
-        "X-Algolia-Application-Id": applicationId,
-      },
-      body,
-    });
+    let request = new Request(url.toString(), { method, body });
+
+    if (requestMiddlewares?.length) {
+      for (const middleware of requestMiddlewares) {
+        request = await middleware({ request, params });
+      }
+    }
+
+    const response = await fetch(request);
 
     const data = await response.json();
 
@@ -179,13 +198,12 @@ function isJsonString(json: unknown): json is string {
 }
 
 function buildParametersZodSchema(operation: Operation) {
-  // TODO: this is specific to search, other open api spec might have different default parameters
-  const parametersSchema: Record<string, ZodType> = {
-    applicationId: z.string(),
-  };
+  const parametersSchema: Record<string, ZodType> = {};
 
-  for (const parameter of operation.parameters) {
-    parametersSchema[parameter.name] = jsonSchemaToZod(parameter.schema);
+  if (operation.parameters) {
+    for (const parameter of operation.parameters) {
+      parametersSchema[parameter.name] = jsonSchemaToZod(parameter.schema);
+    }
   }
 
   const requestBody = operation.requestBody?.content["application/json"];
