@@ -123,6 +123,10 @@ function buildToolCallback({
   return async (params: Record<string, any>) => {
     const { requestBody } = params;
 
+    if (method === "get" && requestBody) {
+      throw new Error("requestBody is not supported for GET requests");
+    }
+
     serverBaseUrl = serverBaseUrl.replace(/{([^}]+)}/g, (_, key) => params[key]);
     const url = new URL(serverBaseUrl);
     url.pathname = path.replace(/{([^}]+)}/g, (_, key) => params[key]);
@@ -134,10 +138,6 @@ function buildToolCallback({
         if (!(parameter.name in params)) continue;
         url.searchParams.set(parameter.name, params[parameter.name]);
       }
-    }
-
-    if (method === "get" && requestBody) {
-      throw new Error("requestBody is not supported for GET requests");
     }
 
     const body = requestBody
