@@ -88,7 +88,8 @@ const ACL = [
   "settings",
   "editSettings",
   "deleteObject",
-] as Acl[];
+  "deleteIndex",
+] satisfies Acl[];
 
 export class DashboardApi {
   #options: DashboardApiOptions;
