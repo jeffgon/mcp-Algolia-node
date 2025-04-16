@@ -6,7 +6,7 @@
     "start": "node --experimental-strip-types --no-warnings=ExperimentalWarnings src/app.ts",
     "type-check": "tsc --noEmit",
     "lint": "eslint --ext .ts src",
-    "build": "bun build ./src/app.ts --compile --minify --sourcemap --target=bun-darwin-arm64 --outfile dist/algolia-mcp-darwin-arm64"
+    "build": "bun build ./src/app.ts --compile"
   },
   "type": "module",
   "keywords": [],
