@@ -111,6 +111,24 @@ export async function startServer(opts: StartServerOptions) {
       dashboardApi,
       openApiSpec: IngestionSpec,
       toolFilter,
+      requestMiddlewares: [
+        // Dirty fix for Claud hallucinating regions
+        async ({ request, params }) => {
+          const application = await dashboardApi.getApplication(params.applicationId);
+          const region = application.data.attributes.log_region === "de" ? "eu" : "us";
+
+          const url = new URL(request.url);
+          const regionFromUrl = url.hostname.match(/data\.(.+)\.algolia.com/)?.[0];
+
+          if (regionFromUrl !== region) {
+            console.error("Had to adjust region from", regionFromUrl, "to", region);
+            url.hostname = `data.${region}.algolia.com`;
+            return new Request(url, request.clone());
+          }
+
+          return request;
+        },
+      ],
     });
 
     const transport = new StdioServerTransport();

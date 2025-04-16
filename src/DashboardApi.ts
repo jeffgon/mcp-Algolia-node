@@ -39,6 +39,10 @@ const Application = z.object({
   }),
 });
 
+const ShowApplication = z.object({
+  data: Application,
+});
+
 const ApplicationList = z.object({
   data: z.array(Application),
   meta: z.object({
@@ -101,6 +105,13 @@ export class DashboardApi {
   async getUser(): Promise<User> {
     const response = await this.#makeRequest(`${this.#options.baseUrl}/1/user`);
     return User.parse(await response.json());
+  }
+
+  async getApplication(applicationId: string) {
+    const response = await this.#makeRequest(
+      `${this.#options.baseUrl}/1/application/${encodeURIComponent(applicationId)}`,
+    );
+    return ShowApplication.parse(await response.json());
   }
 
   async getApplications(): Promise<ApplicationList> {
