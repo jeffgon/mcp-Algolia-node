@@ -14,6 +14,7 @@ export type Operation = {
   description?: string;
   parameters?: Array<Parameter>;
   requestBody?: RequestBody;
+  security?: Array<SecurityItem>;
 };
 
 type Path = Record<Methods, Operation>;
@@ -36,6 +37,15 @@ type RequestBodyContent = {
   schema: JsonSchema;
 };
 
+export type SecurityItem = Record<string, Array<string>>;
+
+export type SecurityScheme = {
+  type: string;
+  in: "header" | "query";
+  name: string;
+  description?: string;
+};
+
 export type OpenApiSpec = {
   info: {
     title: string;
@@ -46,6 +56,10 @@ export type OpenApiSpec = {
     url: string;
     variables?: Record<string, { default: string }>;
   }>;
+  security?: Array<SecurityItem>;
+  components?: {
+    securitySchemes?: Record<string, SecurityScheme>;
+  };
 };
 
 export const SearchSpec = expandAllRefs(SearchSpecJson) as OpenApiSpec;
