@@ -151,6 +151,14 @@ function buildToolCallback({
 
     if (securityKeys.size) {
       for (const key of securityKeys) {
+        const securityScheme = securitySchemes[key];
+
+        if (!securityScheme) {
+          throw new Error(`Security scheme ${key} not found`);
+        } else if (securityScheme.type !== "apiKey") {
+          throw new Error(`Unsupported security scheme type: ${securityScheme.type}`);
+        }
+
         let value: string;
 
         if (key === "apiKey") {
@@ -163,15 +171,15 @@ function buildToolCallback({
           throw new Error(`Missing security parameter: ${key}`);
         }
 
-        switch (securitySchemes[key].in) {
+        switch (securityScheme.in) {
           case "header":
-            request.headers.set(securitySchemes[key].name, value);
+            request.headers.set(securityScheme.name, value);
             break;
           case "query":
-            url.searchParams.set(securitySchemes[key].name, value);
+            url.searchParams.set(securityScheme.name, value);
             break;
           default:
-            throw new Error(`Unsupported security scheme in: ${securitySchemes[key].in}`);
+            throw new Error(`Unsupported security scheme in: ${securityScheme.in}`);
         }
       }
     }
