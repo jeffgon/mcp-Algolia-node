@@ -46,6 +46,11 @@ export type SecurityScheme = {
   description?: string;
 };
 
+type UrlVariable = {
+  default?: string;
+  description?: string;
+};
+
 export type OpenApiSpec = {
   info: {
     title: string;
@@ -54,7 +59,7 @@ export type OpenApiSpec = {
   paths: Record<string, Path>;
   servers: Array<{
     url: string;
-    variables?: Record<string, { default: string }>;
+    variables?: Record<string, UrlVariable>;
   }>;
   security?: Array<SecurityItem>;
   components?: {

@@ -20,10 +20,16 @@ type OpenApiToolsOptions = {
 };
 
 function buildUrlParameters(servers: OpenApiSpec["servers"]): Record<string, ZodType> {
-  return Object.keys(servers[0].variables || {}).reduce(
-    (acc, name) => ({ ...acc, [name]: z.string() }),
-    {},
-  );
+  const vars = servers[0].variables || {};
+
+  return Object.entries(vars).reduce<Record<string, ZodType>>((acc, [name, urlVariable]) => {
+    let schema = z.string();
+    if (urlVariable.description) schema = schema.describe(urlVariable.description);
+
+    acc[name] = schema;
+
+    return acc;
+  }, {});
 }
 
 function buildSecurityParameters(
