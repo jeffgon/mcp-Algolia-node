@@ -13,19 +13,15 @@ import {
   operationId as GetApplicationsOperationId,
 } from "../tools/registerGetApplications.ts";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import {
-  createApiKeyAuthMiddleware,
-  loadOpenApiSpec,
-  registerOpenApiTools,
-} from "../tools/registerOpenApi.ts";
+import { createApiKeyAuthMiddleware, registerOpenApiTools } from "../tools/registerOpenApi.ts";
 import { CONFIG } from "../config.ts";
 import {
-  AB_TESTING_SPEC_PATH,
-  ANALYTICS_SPEC_PATH,
-  MONITORING_SPEC_PATH,
-  RECOMMEND_SPEC_PATH,
-  SEARCH_SPEC_PATH,
-} from "../openApiSpecs.ts";
+  ABTestingSpec,
+  AnalyticsSpec,
+  MonitoringSpec,
+  RecommendSpec,
+  SearchSpec,
+} from "../openApi.ts";
 import { type CliFilteringOptions, getToolFilter, isToolAllowed } from "../toolFilters.ts";
 
 export type StartServerOptions = CliFilteringOptions;
@@ -74,7 +70,7 @@ export async function startServer(opts: StartServerOptions) {
     registerOpenApiTools({
       server,
       dashboardApi,
-      openApiSpec: await loadOpenApiSpec(SEARCH_SPEC_PATH),
+      openApiSpec: SearchSpec,
       toolFilter,
       requestMiddlewares: [apiKeyAuthMiddleware],
     });
@@ -83,7 +79,7 @@ export async function startServer(opts: StartServerOptions) {
     registerOpenApiTools({
       server,
       dashboardApi,
-      openApiSpec: await loadOpenApiSpec(ANALYTICS_SPEC_PATH),
+      openApiSpec: AnalyticsSpec,
       toolFilter,
       requestMiddlewares: [apiKeyAuthMiddleware],
     });
@@ -92,7 +88,7 @@ export async function startServer(opts: StartServerOptions) {
     registerOpenApiTools({
       server,
       dashboardApi,
-      openApiSpec: await loadOpenApiSpec(RECOMMEND_SPEC_PATH),
+      openApiSpec: RecommendSpec,
       toolFilter,
       requestMiddlewares: [apiKeyAuthMiddleware],
     });
@@ -101,7 +97,7 @@ export async function startServer(opts: StartServerOptions) {
     registerOpenApiTools({
       server,
       dashboardApi,
-      openApiSpec: await loadOpenApiSpec(AB_TESTING_SPEC_PATH),
+      openApiSpec: ABTestingSpec,
       toolFilter,
       requestMiddlewares: [apiKeyAuthMiddleware],
     });
@@ -110,7 +106,7 @@ export async function startServer(opts: StartServerOptions) {
     registerOpenApiTools({
       server,
       dashboardApi,
-      openApiSpec: await loadOpenApiSpec(MONITORING_SPEC_PATH),
+      openApiSpec: MonitoringSpec,
       toolFilter,
     });
 

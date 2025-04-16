@@ -1,52 +1,9 @@
-import yaml from "yaml";
-import fs from "node:fs/promises";
 import { z, type ZodType } from "zod";
 import { type McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { type DashboardApi } from "../DashboardApi.ts";
-import { expandAllRefs, jsonSchemaToZod, type JsonSchema } from "../helpers.ts";
+import { jsonSchemaToZod } from "../helpers.ts";
 import { isToolAllowed, type ToolFilter } from "../toolFilters.ts";
-
-type Methods = "get" | "post" | "put" | "delete";
-type Operation = {
-  "x-helper"?: boolean;
-  operationId: string;
-  summary?: string;
-  description?: string;
-  parameters?: Array<Parameter>;
-  requestBody?: RequestBody;
-};
-
-type Path = Record<Methods, Operation>;
-
-type Parameter = {
-  in: "query" | "path";
-  name: string;
-  description?: string;
-  required?: boolean;
-  schema: JsonSchema;
-};
-
-type RequestBody = {
-  required?: boolean;
-  description?: string;
-  content: Record<string, RequestBodyContent>;
-};
-
-type RequestBodyContent = {
-  schema: JsonSchema;
-};
-
-export type OpenApiSpec = {
-  info: {
-    title: string;
-    description: string;
-  };
-  paths: Record<string, Path>;
-  servers: Array<{
-    url: string;
-    variables?: Record<string, { default: string }>;
-  }>;
-};
+import type { Methods, OpenApiSpec, Operation, Parameter } from "../openApi.ts";
 
 export type RequestMiddleware = (opts: {
   request: Request;
@@ -61,12 +18,6 @@ type OpenApiToolsOptions = {
   toolFilter?: ToolFilter;
   requestMiddlewares?: Array<RequestMiddleware>;
 };
-
-export async function loadOpenApiSpec(path: string): Promise<OpenApiSpec> {
-  const openApiSpecContent = await fs.readFile(path, "utf-8");
-  const spec = yaml.parse(openApiSpecContent, {});
-  return expandAllRefs(spec) as OpenApiSpec;
-}
 
 function buildUrlParameters(servers: OpenApiSpec["servers"]) {
   return Object.keys(servers[0].variables || {}).reduce(

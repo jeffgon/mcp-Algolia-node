@@ -1,5 +1,3 @@
-#!/usr/bin/env -S node --experimental-strip-types --no-warnings=ExperimentalWarning
-
 import { Command } from "commander";
 import { type StartServerOptions } from "./commands/start-server.ts";
 import { type ListToolsOptions } from "./commands/list-tools.ts";

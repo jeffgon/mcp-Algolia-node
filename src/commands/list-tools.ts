@@ -1,10 +1,7 @@
-import { loadOpenApiSpec, type OpenApiSpec } from "../tools/registerOpenApi.ts";
 import { operationId as GetUserInfoOperationId } from "../tools/registerGetUserInfo.ts";
 import { operationId as GetApplicationsOperationId } from "../tools/registerGetApplications.ts";
-import * as specs from "../openApiSpecs.ts";
+import { ALL_SPECS, type OpenApiSpec } from "../openApi.ts";
 import { type CliFilteringOptions, getToolFilter, isToolAllowed } from "../toolFilters.ts";
-
-const API_SPECS_PATHS = Object.values(specs);
 
 export type ListToolsOptions = CliFilteringOptions & {
   all: boolean;
@@ -20,8 +17,7 @@ export async function listTools(opts: ListToolsOptions): Promise<void> {
     displayGroup("Dashboard API", dashboardApiTools);
   }
 
-  for (const specPath of API_SPECS_PATHS) {
-    const spec = await loadOpenApiSpec(specPath);
+  for (const spec of ALL_SPECS) {
     const toolIds = extractToolIds(spec).filter((id) => isToolAllowed(id, toolFilter));
 
     if (toolIds.length > 0) {
