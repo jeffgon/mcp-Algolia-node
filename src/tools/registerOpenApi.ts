@@ -12,7 +12,7 @@ export type RequestMiddleware = (opts: {
 }) => Promise<Request>;
 
 type OpenApiToolsOptions = {
-  server: McpServer;
+  server: Pick<McpServer, "tool">;
   dashboardApi: DashboardApi;
   openApiSpec: OpenApiSpec;
   toolFilter?: ToolFilter;
