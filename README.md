@@ -30,9 +30,15 @@ https://github.com/user-attachments/assets/c36a72e0-f790-4b3f-8720-294ab7f5f6eb
 > This executable is not signed because I don't have a payed Apple Developer Account.
 > This means that macOS will "quarantine" it by default when it is downloaded from the internet.
 > The command remove the quarantine, allowing you to run the program. If you don't trust the build,
-> you can always build it yourself from source with `npm run build` (see development environment setup below) 😄.
+> you can always build it yourself from source with `npm run build -- --outfile dist/algolia-mcp` (see development environment setup below) 😄.
 
-4. Configure Claude Desktop
+4. Run <path_to_executable> authenticate. This will open a tab in your browser inviting you to authenticate with
+   the Algolia Dashboard.
+
+5. Configure Claude Desktop
+
+> [!TIP]
+> You can refer to the official documenation here https://modelcontextprotocol.io/quickstart/user
 
 ```json
 {
@@ -44,8 +50,7 @@ https://github.com/user-attachments/assets/c36a72e0-f790-4b3f-8720-294ab7f5f6eb
 }
 ```
 
-5. Restart Claude Desktop
-
+6. Start Claude Desktop
 
 ## What can I ask for?
 
