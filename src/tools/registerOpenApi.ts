@@ -127,8 +127,8 @@ function buildToolCallback({
       throw new Error("requestBody is not supported for GET requests");
     }
 
-    serverBaseUrl = serverBaseUrl.replace(/{([^}]+)}/g, (_, key) => params[key]);
-    const url = new URL(serverBaseUrl);
+    const preparedUrl = serverBaseUrl.replace(/{([^}]+)}/g, (_, key) => params[key]);
+    const url = new URL(preparedUrl);
     url.pathname = path.replace(/{([^}]+)}/g, (_, key) => params[key]);
 
     if (operation.parameters) {

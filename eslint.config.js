@@ -9,4 +9,11 @@ export default defineConfig([
   { files: ["**/*.{js,mjs,cjs,ts}"], languageOptions: { globals: globals.node } },
   tseslint.configs.recommended,
   eslintConfigPrettier,
+  [
+    {
+      rules: {
+        "no-param-reassign": ["error"],
+      },
+    },
+  ],
 ]);
