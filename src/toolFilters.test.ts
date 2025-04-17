@@ -1,5 +1,6 @@
 import { describe, expect, it, test } from "vitest";
-import { getToolFilter, isToolAllowed, ToolFilter } from "./toolFilters.ts";
+import type { ToolFilter } from "./toolFilters.ts";
+import { getToolFilter, isToolAllowed } from "./toolFilters.ts";
 
 test("getToolFilter", () => {
   expect(getToolFilter({})).toEqual({

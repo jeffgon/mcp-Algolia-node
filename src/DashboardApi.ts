@@ -1,6 +1,6 @@
 import { algoliasearch } from "algoliasearch";
 import z from "zod";
-import { AppStateManager } from "./appState.ts";
+import type { AppStateManager } from "./appState.ts";
 import { refreshToken } from "./authentication.ts";
 
 import type { Acl } from "algoliasearch";

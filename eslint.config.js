@@ -13,6 +13,7 @@ export default defineConfig([
     {
       rules: {
         "no-param-reassign": ["error"],
+        "@typescript-eslint/consistent-type-imports": "error",
       },
     },
   ],
