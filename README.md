@@ -73,7 +73,7 @@ Algolia Node MCP lets you interact with your Algolia apps and indices. Here are 
 
 ### AB Testing
 
-- "Do I have any AB Tests currently running on application <APPLICATION_ID>?"
+- "Do I have any AB Tests currently running on application <application_id>?"
 
 ### Analytics
 
@@ -82,6 +82,10 @@ Algolia Node MCP lets you interact with your Algolia apps and indices. Here are 
 ### Monitoring
 
 - "Are there any incidents going on at Algolia currently?"
+
+### Usage
+
+- "I have an Algolia application with id <application_id>. Can you show me a bar chart of my records usage over the past week?"
 
 ## CLI options
 
