@@ -79,6 +79,18 @@ describe("jsonSchemaToZod", () => {
     }).toThrowError();
   });
 
+  it("should bail instead of crashing on recursive schemas", () => {
+    const foo = {
+      type: "object",
+      properties: {},
+    } satisfies JsonSchema;
+
+    // @ts-expect-error - just trust me bro
+    foo.properties.foo = foo;
+
+    expect(() => jsonSchemaToZod(foo)).not.toThrowError();
+  });
+
   it('handles "oneOf" correctly', () => {
     const jsonSchema: JsonSchema = {
       oneOf: [

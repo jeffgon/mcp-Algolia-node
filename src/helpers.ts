@@ -36,73 +36,81 @@ export type JsonSchema =
       (JsonSchemaArray | JsonSchemaString | JsonSchemaObject | JsonSchemaPrimitive));
 
 export function jsonSchemaToZod(jsonSchema: JsonSchema): ZodType {
-  if ("oneOf" in jsonSchema) {
-    return z.union(
-      // @ts-expect-error - zod does not like us building a union type dynamically
-      jsonSchema.oneOf.map((s) => jsonSchemaToZod(s)),
-    );
-  }
-
-  let zodSchema: ZodType;
-
-  switch (jsonSchema.type) {
-    case "string":
-      zodSchema = z.string();
-      break;
-    case "integer":
-      zodSchema = z.number().int();
-      break;
-    case "number":
-      zodSchema = z.number();
-      break;
-    case "array":
-      zodSchema = z.array(jsonSchemaToZod(jsonSchema.items));
-      break;
-    case "object": {
-      const { properties, required, additionalProperties } = jsonSchema;
-
-      let objectSchema: AnyZodObject = z.object(
-        Object.fromEntries(
-          Object.entries(properties ?? {}).map(([key, value]) => {
-            let item = jsonSchemaToZod(value);
-            if (!required?.includes(key)) {
-              item = item.optional();
-            }
-
-            return [key, item];
-          }),
-        ),
+  try {
+    if ("oneOf" in jsonSchema) {
+      return z.union(
+        // @ts-expect-error - zod does not like us building a union type dynamically
+        jsonSchema.oneOf.map((s) => jsonSchemaToZod(s)),
       );
-
-      if (!properties || additionalProperties) {
-        objectSchema = objectSchema.passthrough();
-      }
-
-      zodSchema = objectSchema;
-      break;
     }
-    case "boolean":
-      zodSchema = z.boolean();
-      break;
-    default:
-      zodSchema = z.any();
-      break;
-  }
-  if (jsonSchema.description) {
-    zodSchema = zodSchema.describe(jsonSchema.description);
-  } else if (jsonSchema.title) {
-    zodSchema = zodSchema.describe(jsonSchema.title);
-  }
 
-  if (jsonSchema.type === "string" && jsonSchema.enum) {
-    zodSchema = zodSchema.describe(
-      [zodSchema.description, `Value must be one of: ${jsonSchema.enum.join(", ")}.`]
-        .filter(Boolean)
-        .join("\n"),
+    let zodSchema: ZodType;
+
+    switch (jsonSchema.type) {
+      case "string":
+        zodSchema = z.string();
+        break;
+      case "integer":
+        zodSchema = z.number().int();
+        break;
+      case "number":
+        zodSchema = z.number();
+        break;
+      case "array":
+        zodSchema = z.array(jsonSchemaToZod(jsonSchema.items));
+        break;
+      case "object": {
+        const { properties, required, additionalProperties } = jsonSchema;
+
+        let objectSchema: AnyZodObject = z.object(
+          Object.fromEntries(
+            Object.entries(properties ?? {}).map(([key, value]) => {
+              let item = jsonSchemaToZod(value);
+              if (!required?.includes(key)) {
+                item = item.optional();
+              }
+
+              return [key, item];
+            }),
+          ),
+        );
+
+        if (!properties || additionalProperties) {
+          objectSchema = objectSchema.passthrough();
+        }
+
+        zodSchema = objectSchema;
+        break;
+      }
+      case "boolean":
+        zodSchema = z.boolean();
+        break;
+      default:
+        zodSchema = z.any();
+        break;
+    }
+    if (jsonSchema.description) {
+      zodSchema = zodSchema.describe(jsonSchema.description);
+    } else if (jsonSchema.title) {
+      zodSchema = zodSchema.describe(jsonSchema.title);
+    }
+
+    if (jsonSchema.type === "string" && jsonSchema.enum) {
+      zodSchema = zodSchema.describe(
+        [zodSchema.description, `Value must be one of: ${jsonSchema.enum.join(", ")}.`]
+          .filter(Boolean)
+          .join("\n"),
+      );
+    }
+
+    return zodSchema;
+  } catch {
+    // Recursion is not supported
+    return z.any().describe(
+      // @ts-expect-error -- ignore composition types like `oneOf` case which do not have a description
+      jsonSchema.description || jsonSchema.title || "Unknown type",
     );
   }
-
-  return zodSchema;
 }
 
 export function expandAllRefs(json: object) {
