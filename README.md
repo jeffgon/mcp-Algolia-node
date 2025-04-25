@@ -1,7 +1,5 @@
 # 🔍 Algolia Node.js MCP
 
-> Connect Claude Desktop to your Algolia data using the Model Context Protocol (MCP)
-
 <p align="center">
   <a href="#-quick-start">Quick Start</a> •
   <a href="#-features">Features</a> •
@@ -15,6 +13,15 @@
 </p>
 
 https://github.com/user-attachments/assets/c36a72e0-f790-4b3f-8720-294ab7f5f6eb
+
+
+This repository contains experimental Model Context Protocol (or MCP) servers for interacting with Algolia APIs. We're sharing it for you to explore and experiment with. 
+Feel free to use it, fork it, or build on top of it — but just know that it's not officially supported by Algolia and isn't covered under our SLA. 
+
+We might update it, break it, or remove it entirely at any time. If you customize or configure things here, there's a chance that work could be lost. Also, using MCP in production could affect your Algolia usage.
+
+If you have feedback or ideas (even code!), we'd love to hear it. Just know that we might use it to help improve our products. This project is provided "as is" and "as available," with no guarantees or warranties. To be super clear: MCP isn't considered an "API Client" for SLA purposes.
+
 
 ## ✨ Quick Start
 
