@@ -5,6 +5,7 @@ import { jsonSchemaToZod } from "../helpers.ts";
 import { isToolAllowed, type ToolFilter } from "../toolFilters.ts";
 import type { Methods, OpenApiSpec, Operation, SecurityScheme } from "../openApi.ts";
 import { CONFIG } from "../config.ts";
+import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
 export type RequestMiddleware = (opts: {
   request: Request;
@@ -92,7 +93,6 @@ export async function registerOpenApiTools({
           ...buildUrlParameters(openApiSpec.servers),
           ...buildParametersZodSchema(operation),
         },
-        // @ts-expect-error - the types are hard to satisfy when building tools dynamically. Just trust me bro.
         toolCallback,
       );
     }
@@ -121,7 +121,7 @@ function buildToolCallback({
   dashboardApi,
 }: ToolCallbackBuildOptions) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return async (params: Record<string, any>) => {
+  return async (params: Record<string, any>): Promise<CallToolResult> => {
     const { requestBody } = params;
 
     if (method === "get" && requestBody) {
@@ -194,15 +194,10 @@ function buildToolCallback({
     }
 
     const response = await fetch(request);
-    const data = await response.json();
+    const text = await response.text();
 
     return {
-      content: [
-        {
-          type: "text",
-          text: JSON.stringify(data),
-        },
-      ],
+      content: [{ type: "text", text }],
     };
   };
 }
