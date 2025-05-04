@@ -33,7 +33,7 @@ import {
 } from "../tools/registerSetAttributesForFaceting.ts";
 import {
   registerSetCustomRanking,
-  operationId as SetCustomRankingOperationId
+  operationId as SetCustomRankingOperationId,
 } from "../tools/registerSetCustomRanking.ts";
 
 export type StartServerOptions = CliFilteringOptions;
@@ -58,7 +58,7 @@ export async function startServer(opts: StartServerOptions) {
 
     const server = new McpServer({
       name: "algolia",
-      version: "1.0.0",
+      version: CONFIG.version,
       capabilities: {
         resources: {},
         tools: {},
