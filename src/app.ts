@@ -53,8 +53,13 @@ const DEFAULT_ALLOW_TOOLS = [
 ];
 const ALLOW_TOOLS_OPTIONS_TUPLE = [
   "-t, --allow-tools <tools>",
-  "Comma separated list of tool ids",
-  (val: string) => val.split(",").map((s) => s.trim()),
+  "Comma separated list of tool ids (or all)",
+  (val: string) => {
+    if (val.trim().toLowerCase() === "all") {
+      return undefined;
+    }
+    return val.split(",").map((tool) => tool.trim());
+  },
   DEFAULT_ALLOW_TOOLS,
 ] as const;
 
@@ -75,7 +80,7 @@ function formatErrorForCli(error: unknown): string {
 program
   .command("start-server", { isDefault: true })
   .description("Starts the Algolia MCP server")
-  .option<string[]>(...ALLOW_TOOLS_OPTIONS_TUPLE)
+  .option<string[] | undefined>(...ALLOW_TOOLS_OPTIONS_TUPLE)
   .option(
     "--credentials <applicationId:apiKey>",
     "Application ID and associated API key to use. Optional: the MCP will authenticate you if unspecified, giving you access to all your applications.",
@@ -116,7 +121,7 @@ program
 program
   .command("list-tools")
   .description("List available tools")
-  .option<string[]>(...ALLOW_TOOLS_OPTIONS_TUPLE)
+  .option<string[] | undefined>(...ALLOW_TOOLS_OPTIONS_TUPLE)
   .option("--all", "List all tools")
   .action(async (opts: ListToolsOptions) => {
     const { listTools } = await import("./commands/list-tools.ts");
