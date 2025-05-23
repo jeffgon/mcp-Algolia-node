@@ -15,8 +15,8 @@ const INTERNAL_DENIED_TOOLS = new Set(["customGet", "customPost", "customPut", "
 
 export const getToolFilter = (opts: CliFilteringOptions): ToolFilter => {
   return {
-    allowedTools: opts.allowTools ? new Set(opts.allowTools) : undefined,
-    deniedTools: opts.denyTools ? new Set(opts.denyTools) : undefined,
+    allowedTools: opts.allowTools?.length ? new Set(opts.allowTools) : undefined,
+    deniedTools: opts.denyTools?.length ? new Set(opts.denyTools) : undefined,
   };
 };
 

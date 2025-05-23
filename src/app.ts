@@ -56,7 +56,7 @@ const ALLOW_TOOLS_OPTIONS_TUPLE = [
   "Comma separated list of tool ids (or all)",
   (val: string) => {
     if (val.trim().toLowerCase() === "all") {
-      return undefined;
+      return [];
     }
     return val.split(",").map((tool) => tool.trim());
   },
