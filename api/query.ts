@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import algoliasearch from 'algoliasearch';
 
-const client = algoliasearch('YourAlgoliaAppId', 'YourAlgoliaAdminApiKey');
-const index = client.initIndex('your_index_name');
+const client = algoliasearch('W08WC6SR7N', 'c1e8a9c87c2df23b3faff2a670329b80');
+const index = client.initIndex('test_index');
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'POST') {
