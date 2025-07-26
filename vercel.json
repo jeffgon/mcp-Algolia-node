@@ -2,15 +2,15 @@
   "version": 2,
   "builds": [
     {
-      "src": "src/app.ts",
+      "src": "src/DashboardApi.ts",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/query",
-      "methods": ["POST"],
-      "dest": "src/app.ts"
+      "methods": ["POST", "GET"],
+      "dest": "src/DashboardApi.ts"
     }
   ]
 }
